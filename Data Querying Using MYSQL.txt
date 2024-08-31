@@ -1,0 +1,193 @@
+use gen_z;
+-------------------------------------------------------------------------------------------------------
+##----HERE I WILL BE DELETING ROWS WHERE ANY SPECIFIED COLUMN HAS THE VALUE n/a:---##
+--------------------------------------------------------------------------------------------------------
+DELETE FROM Persnonal_info
+WHERE 
+    Gender = 'n/a' OR 
+    Influences = 'n/a' OR
+    Education_Abroad = 'n/a' OR
+    Employer_3_plus_Years = 'n/a' OR
+    Undefined_Mission = 'n/a' OR
+    Misaligned_Mission = 'n/a' OR
+    Preferred_Work_Environment = 'n/a' OR
+    Employers_would_you_work_with = 'n/a' OR
+    Learning_Environment = 'n/a' OR
+    Aspirational_job = 'n/a' OR
+    Manager_Type = 'n/a' OR
+    Work_setup = 'n/a' OR
+    recently_laid_off = 'n/a' OR
+    work_for_employer_for_7years_plus = 'n/a' OR
+    Email_address = 'n/a' OR
+    company_you_like_to_work_with = 'n/a' OR
+    abusive_manager = 'n/a' OR
+    willing_to_work_everyday_Hours = 'n/a' OR
+    full_week_break = 'n/a' OR
+    Work_Frustration = 'n/a' OR
+    happier_and_productive_at_work = 'n/a';
+-------------------------------------------------------------------------------------------------------------------------------------
+ # 1) What is the gender distribution of respondents from India?
+ select Gender,count(*) as no_of_gender
+ from persnonal_info
+ where Country = 'IND'
+ group by Gender;
+ 
+ -----------------------------------------------------------------------------------------
+ # 2) What percentage of respondents from India are interested in education abroad? 
+ 
+select round(count(Education_Abroad) / (SELECT count(_record_number) from Persnonal_info),2) * 100 as Intrested_in_edu_abroad
+from Persnonal_info
+where Education_Abroad = 'Yes' and country = 'IND';
+
+------------------------------------------------------------------------------------------------------
+# 3) What are the 6 top influences on career aspirations for respondents in India?
+
+select Country,Influences from gen_z.persnonal_info
+where Country = 'IND'
+group by Influences,Country
+order by Influences desc limit 6;
+
+-----------------------------------------------------------------------------------------
+# 4) How do career aspiration influences vary by gender in India?
+
+SELECT  country,Influences,
+       SUM(CASE WHEN Gender = 'M' THEN 1 ELSE 0 END) AS M,
+       SUM(CASE WHEN Gender = 'F' THEN 1 ELSE 0 END) AS F,
+       SUM(CASE WHEN Gender = 'Transgender' THEN 1 ELSE 0 END) AS Transgender,
+       SUM(CASE WHEN Gender NOT IN ('M', 'F', 'Transgender') THEN 1 ELSE 0 END) AS Others
+FROM gen_z.persnonal_info
+WHERE Country = 'IND'
+GROUP BY Country, Influences
+ORDER BY Country, Influences;
+
+------------------------------------------------------------------------------------------------------
+# 5) What percentage of respondents are willing to work for a company for at least 3 years?
+
+select
+    round(count( Employer_3_plus_Years) / (SELECT count(_record_number) from Persnonal_info),2) * 100 as percentage_willing_3_years
+from
+    Persnonal_info
+where
+    Employer_3_plus_Years = 'Yes' and country = 'IND';
+------------------------------------------------------------------------------------------------------------
+#6) How many respondents prefer to work for socially impactful companies?
+
+SELECT COUNT(social_impact_scale) AS respondents_socially_impactful
+FROM Persnonal_info
+WHERE Social_impact_scale > 3 and country = 'IND'; -- Assuming scale 4 and 5 are considered socially impactful
+--------------------------------------------------------------------------------------------------------------
+ # 7 ) How does the preference for socially impactful companies vary by gender?
+ 
+ select gender,count(social_impact_scale) as count
+ from persnonal_info
+ where Social_impact_scale > 3 and country = 'IND'
+ group by gender,Country;
+ ----------------------------------------------------------------------------------------------------------------
+ #8) What is the distribution of minimum expected salary in the first three years among respondents?
+ 
+ select round(avg(Expe_monthly_salary_min),2) as avg_min_monthly_salary
+from Persnonal_info
+where country = 'IND';
+-----------------------------------------------------------------------------------------------------------------
+# 9 ) What is the expected minimum monthly salary in hand?
+
+select min(Expe_monthly_salary_min)
+from persnonal_info
+where country = 'IND'
+group by Expe_monthly_salary_min,Country
+order by Expe_monthly_salary_min asc limit 1;
+----------------------------------------------------------------------------------------------------------------
+# 10) What percentage of respondents prefer remote working?
+
+select (count(Preferred_Work_Environment) / (select COUNT(_record_number) FROM Persnonal_info)) * 100 AS percentage_prefer_remote_job
+from persnonal_info
+where Preferred_Work_Environment = 'Fully Remote' and Country = 'IND';
+-----------------------------------------------------------------------------------------------------------------------------------------
+ # 11) What is the preferred number of daily work hours?
+ 
+ select country, round(avg(willing_to_work_everyday_Hours),2) as preferred_daily_work_hours
+ from persnonal_info
+ where country = 'IND';
+ ----------------------------------------------------------------------------------------------------------------------------------------
+ # 12) What are the common work frustrations among respondents?
+ 
+ select Work_Frustration,count(*) as count
+ from persnonal_info
+ where country = 'IND'
+ group by Work_Frustration
+ order by count(*) desc; 
+ ------------------------------------------------------------------------------------------------------------------------------------------
+ # 13) How does the need for work-life balance interventions vary by gender?
+
+SELECT happier_and_productive_at_work as work_life_balance,
+       SUM(CASE WHEN Gender = 'M' THEN 1 ELSE 0 END) AS M,
+       SUM(CASE WHEN Gender = 'F' THEN 1 ELSE 0 END) AS F,
+       SUM(CASE WHEN Gender = 'Transgender' THEN 1 ELSE 0 END) AS Transgender,
+       SUM(CASE WHEN Gender NOT IN ('M', 'F', 'Transgender') THEN 1 ELSE 0 END) AS Others
+FROM gen_z.persnonal_info
+WHERE Country = 'IND'
+GROUP BY happier_and_productive_at_work
+ORDER BY happier_and_productive_at_work;
+
+-----------------------------------------------------------------------------------------------------------------------------------
+# 14) How many respondents are willing to work under an abusive manager?
+
+select abusive_manager as willing_to_work ,count(*)
+from persnonal_info
+where country = 'IND' and abusive_manager like 'Yes%'
+group by Country,abusive_manager;
+---------------------------------------------------------------------------------------------------------------------------
+# 15) What is the distribution of minimum expected salary after five years?
+
+select After5yearsExpe_monthly_salary_min,count(*) as count
+FROM Persnonal_info
+where country = 'IND'
+GROUP BY After5yearsExpe_monthly_salary_min;
+------------------------------------------------------------------------------------------------------------------------------
+# 16) What are the remote working preferences by gender?
+SELECT Gender,COUNT(*) AS count
+FROM Persnonal_info
+WHERE Preferred_Work_Environment like 'Fully Remote%'
+and country = 'IND' 
+GROUP BY Gender;
+------------------------------------------------------------------------------------------------------------------------------
+ # 17) What are the top work frustrations for each gender
+  
+ #-------FOR MALE-------#
+ select work_frustration,
+ sum(case when Gender = 'M' then 1 else 0 end) as M
+ from persnonal_info
+ where country = 'IND'
+ group by Work_Frustration
+ order by M desc;
+ 
+ #-------FOR FEMALE-------#
+ select work_frustration,
+ sum(case when Gender = 'F' then 1 else 0 end) as F
+ from persnonal_info
+ where country = 'IND'
+ group by Work_Frustration
+ order by F desc;
+ ---------------------------------------------------------------------------------------------------------------
+ # HERE I WAS UNABLE TO GET THE QUERY TO FIND
+#THE TOP WORK FRUSTRATION OF THE BOTH GENDER AT THE SAME TIME.HENCE, 
+#I HAVE CREATE TWO DIFFERENT QUERY FOR EACH GENDER
+----------------------------------------------------------------------------------------------------------------
+
+
+# 18) What factors boost work happiness and productivity for respondents?
+ 
+select happier_and_productive_at_work,count(*) as count
+from persnonal_info
+where Country = 'IND'
+group by happier_and_productive_at_work
+order by count(*) desc;
+------------------------------------------------------------------------------------------------------------------
+# 19) What percentage of respondents need sponsorship for education abroad?
+
+select round(count(Education_Abroad) / (SELECT count(_record_number) from Persnonal_info),2) * 100 as need_sponsership_percentage
+from Persnonal_info
+where Education_Abroad = 'Need sponsor' and country = 'IND';
+
+#---QUESTION 17 ---HAVING DOUBTS ----#
+#-------------------------END--------------------------------#
